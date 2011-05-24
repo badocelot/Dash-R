@@ -34,18 +34,11 @@ if __FILE__ == $0
 		revno = ARGV.shift
 
 		# check for ranges
-		if revno =~ /\.\.\./ then
-			first, last = revno.split('...').map {|rev| parse_revision rev}
-			puts "%s..%s" % [(first.is_a? Fixnum) ? revs[first] : first,
-				             (last != nil) ? ((last.is_a? Fixnum) ? revs[last] \
-				                                                  : last) \
-				                           : ""]
-		elsif revno =~ /\.\./ then
-			first, last = revno.split('..').map {|rev| parse_revision rev}
-			puts "%s..%s" % [(first.is_a? Fixnum) ? revs[first] : first,
-				             (last != nil) ? ((last.is_a? Fixnum) ? revs[last] \
-				                                                  : last) \
-				                           : ""]
+		if revno =~ /[^\.](\.{2,3})[^\.]/ then
+			dots = $1
+			first, last = revno.split(dots).map {|rev| parse_revision rev}
+			puts ((first.is_a? Fixnum) ? revs[first] : first) + dots \
+			     + ((last) ? ((last.is_a? Fixnum) ? revs[last] : last) : "")
 		else
 			# but if there's only one...
 			revno = parse_revision revno
