@@ -14,8 +14,14 @@ else
 	revs.reverse!
 	revno = ARGV.shift
 
-	# if there's only one...
-	if revno !~ /\.\./ and revno !~ /:/ then
+	if revno =~ /\.\.\./ then
+		first, last = revno.split('...').map {|a| a.to_i}
+		puts "%s...%s" % [revs[first], (last) ? revs[last] : ""]
+	elsif revno =~ /\.\./ then
+		first, last = revno.split('..').map {|a| a.to_i}
+		puts "%s..%s" % [revs[first], (last) ? revs[last] : ""]
+	else
+		# but if there's only one...
 		revno = revno.to_i
 		puts revs[revno]
 	end
