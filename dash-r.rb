@@ -15,9 +15,6 @@ def parse_revision rev
 end
 
 if __FILE__ == $0
-	# get the checksums
-	revs = `git log --pretty=oneline`.split("\n").map{|commit| commit.split[0]}
-
 	if (ARGV.length == 0) then
 		# print the log, w/ rev #'s
 		log = `git log`
@@ -28,9 +25,12 @@ if __FILE__ == $0
 		          "\\1 %d  id: \\2")
 		
 		# print the whole mess, putting version numbers in there
-		puts log % revs.length.times.map.reverse
+		# TODO find a better way of getting the commits count
+		num_revs = `git log --pretty=format:'' | wc -l`.to_i + 1
+		puts log % num_revs.times.map.reverse
 	else
-		revs.reverse!
+		# get the checksums
+		revs = `git log --pretty=format:'%H'`.split("\n").reverse
 		revno = ARGV.shift
 
 		# check for ranges
