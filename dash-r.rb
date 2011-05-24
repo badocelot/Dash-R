@@ -21,11 +21,14 @@ if __FILE__ == $0
 	if (ARGV.length == 0) then
 		# print the log, w/ rev #'s
 		log = `git log`
-		revs.length.times do |count|
-			log.gsub!(/^(commit) (#{revs[count]})$/,
-			          "\\1 #{revs.length - (count + 1)}  id: \\2")
-		end
-		puts log
+		# Escape existing %'s
+		log.gsub!('%','%%')
+		# Replace the "commit <hash>" lines with something more useful...
+		log.gsub!(/^(commit) ([0-9a-fA-F]+)$/,
+		          "\\1 %d  id: \\2")
+		
+		# print the whole mess, putting version numbers in there
+		puts log % revs.length.times.map.reverse
 	else
 		revs.reverse!
 		revno = ARGV.shift
