@@ -15,12 +15,17 @@ def parse_revision rev
 end
 
 if __FILE__ == $0
+	# get the checksums
 	revs = `git log --pretty=oneline`.split("\n").map{|commit| commit.split[0]}
 
 	if (ARGV.length == 0) then
+		# print the log, w/ rev #'s
+		log = `git log`
 		revs.length.times do |count|
-			puts "%d: %s" % [revs.length - (count + 1), revs[count]]
+			log.gsub!(/^(commit) (#{revs[count]})$/,
+			          "\\1 #{revs.length - (count + 1)}  id: \\2")
 		end
+		puts log
 	else
 		revs.reverse!
 		revno = ARGV.shift
