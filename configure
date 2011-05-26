@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'ostruct'
+
+if __FILE__ == $0 then
+	# Options to be set
+	o = OpenStruct.new
+	o.prefix = '/usr/local'
+	o.bindir = nil
+	o.cmdname = '-r'
+
+	OptionParser.new do |opts|
+		opts.banner = "Usage: #{$0.split('/')[-1]} [options]"
+	
+		opts.on('--prefix=PATH', String,
+		        'Set installation root path.') \
+		do |p|
+			o.prefix = p
+		end
+	
+		opts.on('--bindir=PATH', String,
+		        'Set the executable installation path.') \
+		do |bd|
+			o.bindir = bd
+		end
+	
+		opts.on('--cmdname=NAME', String,
+		        'Set the installed executable name.') \
+		do |cmd|
+			o.cmdname = cmd
+		end
+		
+		opts.on_tail('-h', '--help', 'Print this message.') do
+			puts opts
+			exit
+		end
+	end.parse!
+
+	# Set bindir --> PREFIX/bin if not explicitly set
+	if o.bindir.nil? then
+		o.bindir = o.prefix + '/bin'
+	end
+
+	# Read Makefile.in
+	make_template = open('Makefile_template').read
+
+	# Output Makefile
+	puts "Generating Makefile..."
+	open('Makefile','w').printf(make_template, o.bindir + '/' + o.cmdname)
+end

@@ -1,0 +1,13 @@
+install_to = %s
+files = dash-r.rb
+
+all:
+	@echo "No building required.  Run 'make install' to install."
+
+install: $(files)
+	@echo Installing as $(install_to)
+	@install dash-r.rb $(install_to)
+
+uninstall:
+	@echo Removing $(install_to)
+	@rm $(install_to)

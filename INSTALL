@@ -1,0 +1,10 @@
+To install, simply use
+
+	./configure
+	sudo make install
+
+You can then use
+
+	sudo make uninstall
+
+to uninstall.
