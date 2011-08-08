@@ -23,7 +23,7 @@ use strict;
 my @DASH_R_VERSION = (1,0,0,'alpha');
 
 sub commitCount {
-	`git log --pretty=format:'' | wc -l`
+	`git log --pretty=format:'' | wc -l` + 1
 }
 
 sub isTag {
@@ -52,7 +52,7 @@ if ($numArgs == 0) {
 	my $count = commitCount();
 	foreach my $line (<LOG>) {
 		if ($line =~ /^(commit) ([0-9a-fA-F]{40})/) {
-			printf "$1 %d  id: $2\n", $count--;
+			printf "$1 %d  id: $2\n", --$count;
 		} else {
 			print $line;
 		}
@@ -90,7 +90,7 @@ elsif (grep $_ eq '--help', @ARGV) {
 		"    v0.2..-2 ==> v0.2..924b23bee3e67de575c20c70c7a89ddddb2b5c30",
 		"",
 		"Invalid revision numbers will be silently ignored.",
-		"");
+	"");
 
 	# TODO: clean this up
 	printf(shift(@usage) . "\n",
@@ -103,9 +103,7 @@ elsif (grep $_ eq '--help', @ARGV) {
 
 # Print the number of commits in the log.
 elsif (grep $_ eq '--count', @ARGV) {
-	my $count = commitCount;
-	$count =~ s/^\s+|\s+$//g;
-	print "$count\n";
+	print commitCount . "\n";
 }
 
 # Get specific commit hashes.
@@ -128,6 +126,7 @@ else {
 				$output .= $endpoints[0];
 			} else {
 				$output .= $revs[$endpoints[0]];
+				chomp $output;
 			}
 
 			$output .= $dots;
@@ -136,6 +135,7 @@ else {
 				$output .= $endpoints[1];
 			} else {
 				$output .= $revs[$endpoints[1]];
+				chomp $output;
 			}
 
 			print "$output\n";
