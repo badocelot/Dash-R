@@ -36,13 +36,25 @@ sub isTag {
 	return !($rev =~ /^-{0,1}\d+$/);
 }
 
+# check if user wants the custom log format
+my $classic_log = (grep $_ eq '--classic', @ARGV);
+
 # If invoked with no arguments, output the amended log.
 my $numArgs = $#ARGV + 1;
-if ($numArgs == 0) {
+if ($numArgs == 0 || ($numArgs == 1 and $classic_log)) {
 	# Print the log, w/ rev numbers
 
 	# Spin the log through the stream editor, then grab it.
-	open(LOG, 'git log |') or die $!;
+	unless ($classic_log) {
+		open(LOG, 'git log --graph --pretty=format:\'' .
+		          'rev:     %%d => %h%n' .
+		          'author:  %an <%ae>%n' .
+		          'date:    %ad%n' .
+		          'summary: %s%n' .
+		          '\' |');
+	} else {
+		open(LOG, 'git log |') or die $!;
+	}
 
 	# Open the pager
 	open LESS, '| less -FSRX' or die $!;
@@ -54,10 +66,23 @@ if ($numArgs == 0) {
 	#
 	#   commit 0  id: c5b1538a56654c096472031f1195720b18f88a4f
 	#
+	
+	# The --classic log does not output the branch name
+	unless ($classic_log) {
+		my $branch = `git symbolic-ref HEAD 2> /dev/null`;
+		$branch =~ s|^refs/heads/||;
+		
+		if ($branch) {
+			print "branch: $branch\n";
+		}
+	}
+	
 	my $count = commitCount();
 	foreach my $line (<LOG>) {
-		if ($line =~ /^(commit) ([0-9a-fA-F]{40})/) {
+		if ($classic_log and $line =~ /^(commit) ([0-9a-fA-F]{40})/) {
 			printf "$1 %d  id: $2\n", --$count;
+		} elsif (not $classic_log and $line =~ /rev:     %d => [0-9a-fA-F]+$/) {
+			printf $line, --$count;
 		} else {
 			print $line;
 		}
@@ -78,10 +103,12 @@ elsif (grep $_ eq '--help', @ARGV) {
 
 	my @usage = (
 		"Dash-R v%d.%d.%d%s",
-		"Usage: $c                  :: Print git log with revision numbers",
+		"Usage: $c                  :: Print log with revision numbers",
+		"       $c --classic        :: Print log using classic style",
+		"                                 (like normal git log + numbers)",
 		"       $c <revno> [...]    :: Output commit(s) or range of commits",
-		"                                - Accepts .. and ... for ranges)",
-		"                                - Accepts negative numbers ala bzr/hg",
+		"                                 - Accepts .. and ... for ranges)",
+		"                                 - Accepts negative numbers ala bzr/hg",
 		"",
 		"       $c --help           :: Show this message",
 		"       $c --count          :: Display the number of commits",
