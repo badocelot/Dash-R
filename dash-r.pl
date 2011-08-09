@@ -26,6 +26,11 @@ sub commitCount {
 	`git log --pretty=format:'' | wc -l` + 1
 }
 
+sub inBounds {
+	my ($rev, $max) = @_;
+	return ($rev <= $max and -$rev <= $max + 1);
+}
+
 sub isTag {
 	my $rev = shift;
 	return !($rev =~ /^-{0,1}\d+$/);
@@ -114,39 +119,32 @@ else {
 
 	foreach my $revno (@ARGV) {
 		# check for ranges
-		if ($revno =~ /[^\.](\.{2,3})[^\.]/) {
+		if ($revno =~ /(\.{2,3})/) {
 			my $dots = $1;
-			my @endpoints = split(/\.{2,3}/, $revno);
+			my @endpoints = split(/\.{2,3}/, $revno, 2);
 
 			# build the output
-			my $output = '';
+			my @output = ();
 
 			# check the endpoints for tags/branches
-			if (isTag($endpoints[0])) {
-				$output .= $endpoints[0];
-			} else {
-				$output .= $revs[$endpoints[0]];
-				chomp $output;
+			for my $p (@endpoints) {
+				if (!defined $p or isTag $p or !inBounds $p, $#revs) {
+					push @output, $p;  # apply literally
+				} else {
+					push @output, $revs[$p];
+				}
 			}
+			chomp @output;
 
-			$output .= $dots;
-
-			if (isTag($endpoints[1])) {
-				$output .= $endpoints[1];
-			} else {
-				$output .= $revs[$endpoints[1]];
-				chomp $output;
-			}
-
-			print "$output\n";
+			print "@{[join $dots, @output]} ";
 		}
 
 		# but if there's only one...
 		else {
-			if (isTag($revno)) {
-				print "$revno\n";
+			if (!defined $revno or isTag $revno or !inBounds $revno, $#revs) {
+				print "$revno ";
 			} else {
-				print "$revs[$revno]\n";
+				print "$revs[$revno] ";
 			}
 		}
 	}
