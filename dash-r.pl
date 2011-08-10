@@ -55,7 +55,8 @@ if ($numArgs == 0) {
 	#   commit 0  id: c5b1538a56654c096472031f1195720b18f88a4f
 	#
 	my $count = commitCount();
-	foreach my $line (<LOG>) {
+	until (eof LOG) {
+		my $line = <LOG>;
 		if ($line =~ /^(commit) ([0-9a-fA-F]{40})/) {
 			printf "$1 %d  id: $2\n", --$count;
 		} else {
