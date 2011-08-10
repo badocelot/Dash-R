@@ -23,7 +23,17 @@ use strict;
 my @DASH_R_VERSION = (1,0,0,'alpha');
 
 sub commitCount {
-	`git log --pretty=format:'' | wc -l` + 1
+	open COUNT, q(git log --pretty=format:''|);
+
+	my $count = 1;
+	while (!eof COUNT) {
+		<COUNT>;
+		++$count;
+	}
+
+	close COUNT;
+
+	return $count;
 }
 
 sub inBounds {
@@ -45,8 +55,8 @@ if ($numArgs == 0) {
 	open(LOG, 'git log |') or die $!;
 
 	# Open the pager
-	open LESS, '| less -FSRX' or die $!;
-	select LESS;
+	open PAGER, '| less -FSRX' or die $!;
+	select PAGER;
 
 	# Print the new log, with commit numbers, counting from zero
 	#
@@ -67,7 +77,7 @@ if ($numArgs == 0) {
 
 	# Close the pager
 	select STDOUT;
-	close LESS;
+	close PAGER;
 }
 
 # If the user asked for instruction, give them instructions.
