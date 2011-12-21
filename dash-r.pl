@@ -1,4 +1,4 @@
-#!/usr/bin/env perl -w
+#!/usr/bin/env perl
 
 # Dash-R -- git revisions numbers at last!
 # Copyright 2011  James M. Jensen II <badocelot@badocelot.com>
@@ -18,6 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use strict;
+use warnings;
 
 # Format: [major, minor, bugfix, status]
 my @DASH_R_VERSION = (1,0,0,'alpha');
