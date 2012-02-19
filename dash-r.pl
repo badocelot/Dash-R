@@ -67,10 +67,6 @@ if ($numArgs == 0 || ($numArgs == 1 and $classic_log)) {
       open(LOG, 'git log |') or die $!;
    }
 
-   # Open the pager
-   open PAGER, '| less -FSRX' or die $!;
-   select PAGER;
-
    # Print the new log, with commit numbers, counting from zero
    #
    # Commit lines should now appear like:
@@ -101,10 +97,6 @@ if ($numArgs == 0 || ($numArgs == 1 and $classic_log)) {
       }
    }
    print "\n";
-
-   # Close the pager
-   select STDOUT;
-   close PAGER;
 }
 
 # If the user asked for instruction, give them instructions.
