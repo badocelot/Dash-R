@@ -19,6 +19,7 @@
 
 use strict;
 use warnings;
+use Text::ParseWords;
 
 # Format: [major, minor, bugfix, status]
 my @DASH_R_VERSION = (1,0,0,'alpha');
@@ -48,6 +49,7 @@ sub isTag {
 }
 
 # check if user wants the custom log format
+push @ARGV, shellwords $ENV{DASH_R_OPTS}; # add in environment options
 my $classic_log = (grep $_ eq '--classic', @ARGV);
 
 # If invoked with no arguments, output the amended log.
