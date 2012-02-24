@@ -1,51 +1,45 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env perl
 
-require 'optparse'
-require 'ostruct'
+use strict;
+use warnings;
+use Getopt::Long;
 
-if __FILE__ == $0 then
-	# Options to be set
-	o = OpenStruct.new
-	o.prefix = '/usr/local'
-	o.bindir = nil
-	o.cmdname = '-r'
+if (__FILE__ eq $0) {
+   # Some default option values
+   my %options = ('prefix' => '/usr/local',
+	       'cmdname' => '-r');
 
-	OptionParser.new do |opts|
-		opts.banner = "Usage: #{$0.split('/')[-1]} [options]"
-	
-		opts.on('--prefix=PATH', String,
-		        'Set installation root path.') \
-		do |p|
-			o.prefix = p
-		end
-	
-		opts.on('--bindir=PATH', String,
-		        'Set the executable installation path.') \
-		do |bd|
-			o.bindir = bd
-		end
-	
-		opts.on('--cmdname=NAME', String,
-		        'Set the installed executable name.') \
-		do |cmd|
-			o.cmdname = cmd
-		end
-		
-		opts.on_tail('-h', '--help', 'Print this message.') do
-			puts opts
-			exit
-		end
-	end.parse!
+   if (@ARGV) {
+      GetOptions ('help|h' => \$options{help},
+		  'prefix=s' => \$options{prefix},
+		  'bindir=s' => \$options{bindir},
+		  'cmdname=s' => \$options{cmdname});
+   }
 
-	# Set bindir --> PREFIX/bin if not explicitly set
-	if o.bindir.nil? then
-		o.bindir = o.prefix + '/bin'
-	end
+   if ($options{help}) {
+      my $progname = (split '/', $0)[-1];
+      print
+	sprintf ("%s\n" x 5,
+		 "Usage: $progname [options]",
+		 "\t--prefix=PATH\t\tSet the installation root path.",
+		 "\t--bindir=PATH\t\tSet the executable installation path.",
+		 "\t--cmdname=PATH\t\tSet the installed executable name.",
+		 "    -h, --help\t\t\tPrint this message.");
+      exit;
+   }
 
-	# Read Makefile.in
-	make_template = open('Makefile_template').read
+   # Set bindir --> PREFIX/bin if not explicitly set
+   if (not defined $options{bindir}) {
+      $options{bindir} = $options{prefix} . '/bin'
+   }
 
-	# Output Makefile
-	puts "Generating Makefile..."
-	open('Makefile','w').printf(make_template, o.bindir + '/' + o.cmdname)
-end
+   # Read Makefile_template
+   open TEMPLATE, 'Makefile_template';
+   undef $/;
+   my $template = <TEMPLATE>;
+
+   # Output Makefile
+   print "Generating Makefile...\n";
+   open MAKEFILE, '>Makefile';
+   printf MAKEFILE $template, $options{bindir} . '/' . $options{cmdname}
+}
