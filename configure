@@ -34,12 +34,26 @@ if (__FILE__ eq $0) {
    }
 
    # Read Makefile_template
-   open TEMPLATE, 'Makefile_template';
    undef $/;
-   my $template = <TEMPLATE>;
+   my $template = <DATA>;
 
    # Output Makefile
    print "Generating Makefile...\n";
    open MAKEFILE, '>Makefile';
    printf MAKEFILE $template, $options{bindir} . '/' . $options{cmdname}
 }
+
+__DATA__
+install_to = %s
+files = dash-r.pl
+
+all:
+	@echo "No building required.  Run 'make install' to install."
+
+install: $(files)
+	@echo Installing as $(install_to)
+	@install dash-r.pl $(install_to)
+
+uninstall:
+	@echo Removing $(install_to)
+	@rm $(install_to)
