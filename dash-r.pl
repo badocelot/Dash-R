@@ -22,7 +22,7 @@ use warnings;
 use Text::ParseWords;
 
 # Format: [major, minor, bugfix, status]
-my @DASH_R_VERSION = (1,0,0,'rc1');
+my @DASH_R_VERSION = (1,0,0,'rc2');
 
 sub commitCount {
    open COUNT, q(git log --pretty=format:''|);
