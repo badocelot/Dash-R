@@ -70,7 +70,8 @@ if ($numArgs == 0 || ($numArgs == 1 and $classic_log)) {
    }
 
    # Open the pager
-   open PAGER, '| less -FSRX' or die $!;
+   $ENV{LESS} = $ENV{LESS} || 'FSRX';
+   open PAGER, '| less' or die $!;
    select PAGER;
 
    # Print the new log, with commit numbers, counting from zero
