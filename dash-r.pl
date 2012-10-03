@@ -22,7 +22,7 @@ use warnings;
 use Text::ParseWords;
 
 # Format: [major, minor, bugfix, status]
-my @DASH_R_VERSION = (1,0,0,'rc2');
+my @DASH_R_VERSION = (1,0,0,'');
 
 sub commitCount {
    open COUNT, q(git log --pretty=format:''|);
@@ -60,11 +60,11 @@ if ($numArgs == 0 || ($numArgs == 1 and $classic_log)) {
    # Spin the log through the stream editor, then grab it.
    unless ($classic_log) {
       open(LOG, 'git log --graph --pretty=format:\'' .
-	   'rev:     %%d => %h%n' .
-	   'author:  %an <%ae>%n' .
-	   'date:    %ad%n' .
-	   'summary: %s%n' .
-	   '\' |');
+           'rev:     %%d => %h%n' .
+           'author:  %an <%ae>%n' .
+           'date:    %ad%n' .
+           'summary: %s%n' .
+           '\' |');
    } else {
       open(LOG, 'git log |') or die $!;
    }
@@ -86,7 +86,7 @@ if ($numArgs == 0 || ($numArgs == 1 and $classic_log)) {
       $branch =~ s|^refs/heads/||;
 
       if ($branch) {
-	 print "branch: $branch\n";
+         print "branch: $branch\n";
       }
    }
 
@@ -95,11 +95,11 @@ if ($numArgs == 0 || ($numArgs == 1 and $classic_log)) {
       my $line = <LOG>;
 
       if ($classic_log and $line =~ /^(commit) ([0-9a-fA-F]{40})/) {
-	 printf "$1 %d  id: $2\n", --$count;
+         printf "$1 %d  id: $2\n", --$count;
       } elsif (not $classic_log and $line =~ /rev:     %d => [0-9a-fA-F]+$/) {
-	 printf $line, --$count;
+         printf $line, --$count;
       } else {
-	 print $line;
+         print $line;
       }
    }
    print "\n";
@@ -116,36 +116,32 @@ elsif (grep $_ eq '--help', @ARGV) {
    # Find the name under which this was invoked
    my $c = (split m|/|, $0, -1)[-1];
 
-   my @usage = (
-		"Dash-R v%d.%d.%d%s",
-		"Usage: $c                  :: Print log with revision numbers",
-		"       $c --classic        :: Print log using classic style",
-		"                                 (like normal git log + numbers)",
-		"       $c <revno> [...]    :: Output commit(s) or range of commits",
-		"                                 - Accepts .. and ... for ranges)",
-		"                                 - Accepts negative numbers ala bzr/hg",
-		"",
-		"       $c --help           :: Show this message",
-		"       $c --count          :: Display the number of commits",
-		"",
-		"`$c <revno>` can be used to introduce git to revision numbers:",
-		"",
-		"    git diff `$c 2..-2` ==> git diff <arcane hash>..HEAD^",
-		"",
-		"Non-integer tags will be left unparsed:",
-		"",
-		"    v0.2..-2 ==> v0.2..924b23bee3e67de575c20c70c7a89ddddb2b5c30",
-		"",
-		"Invalid revision numbers will be silently ignored.",
-		"");
+   my $usage =
+qq|Dash-R v%d.%d.%d%s
+Usage: $c                  :: Print log with revision numbers
+       $c --classic        :: Print log using classic style
+                                 (like normal git log + numbers)
+       $c <revno> [...]    :: Output commit(s) or range of commits
+                                 - Accepts .. and ... for ranges)
+                                 - Accepts negative numbers ala bzr/hg
+
+       $c --help           :: Show this message
+       $c --count          :: Display the number of commits
+
+`$c <revno>` can be used to introduce git to revision numbers:
+
+    git diff `$c 2..-2` ==> git diff <arcane hash>..HEAD^
+
+Non-integer tags will be left unparsed:
+
+    v0.2..-2 ==> v0.2..924b23bee3e67de575c20c70c7a89ddddb2b5c30
+
+Invalid revision numbers will be silently ignored.
+|;
 
    # TODO: clean this up
-   printf(shift(@usage) . "\n",
-	  $DASH_R_VERSION[0], $DASH_R_VERSION[1],
-	  $DASH_R_VERSION[2], $DASH_R_VERSION[3]);
-   foreach my $line (@usage) {
-      print "$line\n";
-   }
+   printf($usage, $DASH_R_VERSION[0], $DASH_R_VERSION[1], $DASH_R_VERSION[2],
+                  $DASH_R_VERSION[3]);
 }
 
 # Print the number of commits in the log.
@@ -162,32 +158,32 @@ else {
    foreach my $revno (@ARGV) {
       # check for ranges
       if ($revno =~ /(\.{2,3})/) {
-	 my $dots = $1;
-	 my @endpoints = split(/\.{2,3}/, $revno, 2);
+         my $dots = $1;
+         my @endpoints = split(/\.{2,3}/, $revno, 2);
 
-	 # build the output
-	 my @output = ();
+         # build the output
+         my @output = ();
 
-	 # check the endpoints for tags/branches
-	 for my $p (@endpoints) {
-	    if (!defined $p or isTag $p or !inBounds $p, $#revs) {
-	       push @output, $p; # apply literally
-	    } else {
-	       push @output, $revs[$p];
-	    }
-	 }
-	 chomp @output;
+         # check the endpoints for tags/branches
+         for my $p (@endpoints) {
+            if (!defined $p or isTag $p or !inBounds $p, $#revs) {
+               push @output, $p; # apply literally
+            } else {
+               push @output, $revs[$p];
+            }
+         }
+         chomp @output;
 
-	 print "@{[join $dots, @output]} ";
+         print "@{[join $dots, @output]} ";
       }
 
       # but if there's only one...
       else {
-	 if (!defined $revno or isTag $revno or !inBounds $revno, $#revs) {
-	    print "$revno ";
-	 } else {
-	    print "$revs[$revno] ";
-	 }
+         if (!defined $revno or isTag $revno or !inBounds $revno, $#revs) {
+            print "$revno ";
+         } else {
+            print "$revs[$revno] ";
+         }
       }
    }
 }
