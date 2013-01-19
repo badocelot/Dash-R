@@ -22,7 +22,7 @@ use warnings;
 use Text::ParseWords;
 
 # Format: [major, minor, bugfix, status]
-my @DASH_R_VERSION = (2,0,0,'-alpha.1');
+my @DASH_R_VERSION = (2,0,0,'-alpha');
 
 sub commitCount {
    my $branch = shift;
