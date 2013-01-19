@@ -22,19 +22,12 @@ use warnings;
 use Text::ParseWords;
 
 # Format: [major, minor, bugfix, status]
-my @DASH_R_VERSION = (1,0,0,'');
+my @DASH_R_VERSION = (2,0,0,'-alpha.1');
 
 sub commitCount {
-   open COUNT, q(git log --pretty=format:''|);
-
-   my $count = 1;
-   while (!eof COUNT) {
-      <COUNT>;
-      ++$count;
-   }
-
-   close COUNT;
-
+   my $branch = shift;
+   my $count  = `git rev-list $branch | wc -l`;
+   chomp $count;
    return $count;
 }
 
@@ -48,26 +41,30 @@ sub isTag {
    return !($rev =~ /^-{0,1}\d+$/);
 }
 
+sub thisBranch {
+   my $branch = `git symbolic-ref HEAD 2> /dev/null`;
+   $branch =~ s|^refs/heads/||;
+   chomp $branch;
+   return $branch;
+}
+
 # check if user wants the custom log format
 push @ARGV, shellwords $ENV{DASH_R_OPTS}; # add in environment options
-my $classic_log = (grep $_ eq '--classic', @ARGV);
+my $all = (grep $_ eq '--all', @ARGV) ? '--all' : '';
 
 # If invoked with no arguments, output the amended log.
 my $numArgs = $#ARGV + 1;
-if ($numArgs == 0 || ($numArgs == 1 and $classic_log)) {
+if ($numArgs == 0 || ($numArgs == 1 and $all)) {
    # Print the log, w/ rev numbers
 
    # Spin the log through the stream editor, then grab it.
-   unless ($classic_log) {
-      open(LOG, 'git log --graph --pretty=format:\'' .
-           'rev:     %%d => %h%n' .
-           'author:  %an <%ae>%n' .
-           'date:    %ad%n' .
-           'summary: %s%n' .
-           '\' |');
-   } else {
-      open(LOG, 'git log |') or die $!;
-   }
+   open(LOG, 'git log ' . ($all ? '--all' : '') .
+        ' --graph --pretty=format:\'' .
+        'rev:     %%d => %h %d%n' .
+        'author:  %an <%ae>%n' .
+        'date:    %ad%n' .
+        'summary: %s%n' .
+        '\' |') or die $!;
 
    # Open the pager
    $ENV{LESS} = $ENV{LESS} || 'FSRX';
@@ -81,23 +78,13 @@ if ($numArgs == 0 || ($numArgs == 1 and $classic_log)) {
    #   commit 0  id: c5b1538a56654c096472031f1195720b18f88a4f
    #
 
-   # The --classic log does not output the branch name
-   unless ($classic_log) {
-      my $branch = `git symbolic-ref HEAD 2> /dev/null`;
-      $branch =~ s|^refs/heads/||;
+   print "branch: " . thisBranch . "\n\n" unless ($all);
 
-      if ($branch) {
-         print "branch: $branch\n";
-      }
-   }
-
-   my $count = commitCount();
+   my $count = commitCount($all or thisBranch);
    until (eof LOG) {
       my $line = <LOG>;
 
-      if ($classic_log and $line =~ /^(commit) ([0-9a-fA-F]{40})/) {
-         printf "$1 %d  id: $2\n", --$count;
-      } elsif (not $classic_log and $line =~ /rev:     %d => [0-9a-fA-F]+$/) {
+      if ($line =~ /rev:     %d => .+$/) {
          printf $line, --$count;
       } else {
          print $line;
@@ -120,8 +107,7 @@ elsif (grep $_ eq '--help', @ARGV) {
    my $usage =
 qq|Dash-R v%d.%d.%d%s
 Usage: $c                  :: Print log with revision numbers
-       $c --classic        :: Print log using classic style
-                                 (like normal git log + numbers)
+       $c --all            :: Work with all branches (like hg)
        $c <revno> [...]    :: Output commit(s) or range of commits
                                  - Accepts .. and ... for ranges)
                                  - Accepts negative numbers ala bzr/hg
@@ -147,16 +133,20 @@ Invalid revision numbers will be silently ignored.
 
 # Print the number of commits in the log.
 elsif (grep $_ eq '--count', @ARGV) {
-   print commitCount . "\n";
+   print commitCount($all or thisBranch) . "\n";
 }
 
 # Get specific commit hashes.
 else {
    # get the checksums
-   my @revs = `git log --pretty=format:'%H'`;
+   my @revs = `git log $all --pretty=format:'%h'`;
    @revs = reverse @revs;
+   chomp @revs;
 
    foreach my $revno (@ARGV) {
+      # prevent options from being interpreted as tags
+      next if ($revno =~ /^\-/);
+      
       # check for ranges
       if ($revno =~ /(\.{2,3})/) {
          my $dots = $1;
