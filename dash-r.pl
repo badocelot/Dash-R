@@ -50,11 +50,11 @@ sub thisBranch {
 
 # check if user wants the custom log format
 push @ARGV, shellwords $ENV{DASH_R_OPTS}; # add in environment options
-my $all = (grep $_ eq '--all', @ARGV) ? '--all' : '';
+my $all = (grep $_ eq '--branch', @ARGV) ? '' : '--all';
 
 # If invoked with no arguments, output the amended log.
 my $numArgs = $#ARGV + 1;
-if ($numArgs == 0 || ($numArgs == 1 and $all)) {
+if ($numArgs == 0 || ($numArgs == 1 and $ARGV[0] eq '--branch')) {
    open(LOG, 'git log ' . ($all ? '--all' : '') .
         ' --graph --pretty=format:\'' .
         'rev:     %%d => %h %d%n' .
@@ -69,7 +69,11 @@ if ($numArgs == 0 || ($numArgs == 1 and $all)) {
    select PAGER;
 
    # Print the log, w/ rev numbers
-   print "branch: " . thisBranch . "\n\n" unless ($all);
+   if ($all) {
+      print "All branches in this repository:\n\n";
+   } else {
+      print "branch: " . thisBranch . "\n\n";
+   }
    my $count = commitCount($all or thisBranch);
    until (eof LOG) {
       my $line = <LOG>;
@@ -97,7 +101,8 @@ elsif (grep $_ eq '--help', @ARGV) {
    my $usage =
 qq|Dash-R v%d.%d.%d%s
 Usage: $c                  :: Print log with revision numbers
-       $c --all            :: Work with all branches (like hg)
+       $c --branch         :: Output only the revisions from the current branch
+                                 (WARNING: This changes revision numbers!)
        $c <revno> [...]    :: Output commit(s) or range of commits
                                  - Accepts .. and ... for ranges)
                                  - Accepts negative numbers ala bzr/hg
