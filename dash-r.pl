@@ -55,9 +55,6 @@ my $all = (grep $_ eq '--all', @ARGV) ? '--all' : '';
 # If invoked with no arguments, output the amended log.
 my $numArgs = $#ARGV + 1;
 if ($numArgs == 0 || ($numArgs == 1 and $all)) {
-   # Print the log, w/ rev numbers
-
-   # Spin the log through the stream editor, then grab it.
    open(LOG, 'git log ' . ($all ? '--all' : '') .
         ' --graph --pretty=format:\'' .
         'rev:     %%d => %h %d%n' .
@@ -71,15 +68,8 @@ if ($numArgs == 0 || ($numArgs == 1 and $all)) {
    open PAGER, '| less' or die $!;
    select PAGER;
 
-   # Print the new log, with commit numbers, counting from zero
-   #
-   # Commit lines should now appear like:
-   #
-   #   commit 0  id: c5b1538a56654c096472031f1195720b18f88a4f
-   #
-
+   # Print the log, w/ rev numbers
    print "branch: " . thisBranch . "\n\n" unless ($all);
-
    my $count = commitCount($all or thisBranch);
    until (eof LOG) {
       my $line = <LOG>;
