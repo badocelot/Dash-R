@@ -129,7 +129,8 @@ elsif (grep $_ eq '--count', @ARGV) {
 # Get specific commit hashes.
 else {
    # get the checksums
-   my @revs = `git log $all --pretty=format:'%h'`;
+   my $branch = $all or thisBranch;
+   my @revs = `git rev-list $branch`;
    @revs = reverse @revs;
    chomp @revs;
 
